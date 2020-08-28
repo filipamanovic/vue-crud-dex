@@ -1,6 +1,9 @@
 <template>
   <form class="mt-4 col-8" @submit.prevent="updateEmployee">
     <h4>{{(isEdit)? 'Edit' : 'Create'}} employee</h4>
+    <div class="alert alert-warning" role="alert" v-if="userIdTaken">
+      EmployeeID is taken, please choose another one
+    </div>
     <div class="form-row">
       <div class="form-group col-md-3">
         <label>EmployeeID</label>
@@ -121,6 +124,7 @@
         departmentForm: [],
         editCheck: true,
         isEdit: false,
+        userIdTaken: false,
       }
     },
     created() {
@@ -201,17 +205,39 @@
             })
           })
         } else {
-          db.collection('employees').add({
-            employee_id: this.employee.employee_id,
-            name: this.employee.name,
-            position: this.employee.position,
-            email: this.employee.email,
-            dateOfBirth: this.employee.dateOfBirth,
-            skills: this.employee.skills,
-            departments: this.employee.departments
-          }).then(() => {
-            this.$router.push('/')
-          }).catch(error => console.log(error))
+          // db.collection('employees').where("employee_id", "==", this.employee.employee_id).get()
+          //   .then(qs => {qs.forEach(doc => console.log(doc.exists))})
+          db.collection('employees').where("employee_id", "==", this.employee.employee_id).get().then(
+            qs => {
+              if (qs.empty) {
+                db.collection('employees').add({
+                  employee_id: this.employee.employee_id,
+                  name: this.employee.name,
+                  position: this.employee.position,
+                  email: this.employee.email,
+                  dateOfBirth: this.employee.dateOfBirth,
+                  skills: this.employee.skills,
+                  departments: this.employee.departments
+                }).then(() => {
+                  this.$router.push('/')
+                }).catch(error => console.log(error));
+                this.userIdTaken = false;
+              } else {
+                this.userIdTaken = true;
+              }
+            }
+          );
+          // db.collection('employees').add({
+          //   employee_id: this.employee.employee_id,
+          //   name: this.employee.name,
+          //   position: this.employee.position,
+          //   email: this.employee.email,
+          //   dateOfBirth: this.employee.dateOfBirth,
+          //   skills: this.employee.skills,
+          //   departments: this.employee.departments
+          // }).then(() => {
+          //   this.$router.push('/')
+          // }).catch(error => console.log(error))
         }
       },
       addSkill() {
@@ -245,7 +271,7 @@
           this.tmpArray.forEach(dep123 => {
             tmpArray.push(dep123.deptName);
           });
-          if (this.tmpArray.find(d => d.deptName === dep).subDept !== undefined) {
+          if (this.tmpArray.find(d => d.deptName === dep) !== undefined && this.tmpArray.find(d => d.deptName === dep).subDept !== undefined) {
             this.tmpArray = this.tmpArray.find(d => d.deptName === dep).subDept
           }
           this.departmentForm.push(tmpArray);
