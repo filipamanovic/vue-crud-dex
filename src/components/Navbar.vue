@@ -9,13 +9,16 @@
 
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
-          <!--<li class="nav-item active">-->
-            <!--<router-link to="/new" class="nav-link">Create employee</router-link>-->
-          <!--</li>-->
           <li class="nav-item active">
             <router-link v-bind:to="{name: 'new-employee'}"
                          class="nav-link">
               Create employee
+            </router-link>
+          </li>
+          <li class="nav-item active">
+            <router-link v-bind:to="{name: 'manage-departments'}"
+                         class="nav-link">
+              Manage departments
             </router-link>
           </li>
         </ul>

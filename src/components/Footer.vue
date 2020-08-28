@@ -1,11 +1,11 @@
 <template>
   <!-- Site footer -->
-  <footer class="site-footer">
+  <footer class="site-footer mt-auto bg-dark">
     <div class="container">
       <div class="row">
         <div class="col-md-8 col-sm-6 col-xs-12">
           <p class="copyright-text">Copyright &copy; 2020 All Rights Reserved by
-            <a href="https://github.com/filipamanovic" target="_blank">@me</a>
+            <a href="https://github.com/filipamanovic/vue-crud-dex" target="_blank">@me</a>
           </p>
         </div>
 
@@ -25,15 +25,12 @@
 <style>
   .site-footer
   {
-    background-color:#060e09;
+    background-color:#343a40!important;
     padding:25px 0 10px;
     font-size:15px;
     line-height:24px;
     color:#fff;
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: auto;
+
   }
   .site-footer hr
   {

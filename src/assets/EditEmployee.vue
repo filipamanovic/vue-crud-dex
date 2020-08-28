@@ -1,13 +1,13 @@
 <template>
   <form class="mt-4 col-8" @submit.prevent="updateEmployee">
-    <h4>{{(isEdit)? 'Edit' : 'Create'}} employee</h4>
+    <h4>Edit employee</h4>
     <div class="form-row">
       <div class="form-group col-md-3">
         <label>EmployeeID</label>
         <input type="text" class="form-control"
                id="employeeID" required
                v-model="employee.employee_id"
-                :disabled="isEdit">
+                disabled>
       </div>
       <div class="form-group col-md-5">
         <label>Name</label>
@@ -51,12 +51,12 @@
           Add Skill
         </button>
       </div>
-      <!--<div class="form-group col-md-6" v-if="employee.skills.length > 0">-->
-        <!--<button class="btn btn-outline-warning btn-block"-->
-                <!--@click.prevent="removeSkill">-->
-          <!--Remove skill-->
-        <!--</button>-->
-      <!--</div>-->
+      <div class="form-group col-md-6" v-if="employee.skills.length > 0">
+        <button class="btn btn-outline-warning btn-block"
+                @click.prevent="removeSkill">
+          Remove skill
+        </button>
+      </div>
     </div>
     <div class="form-row" v-for="(skill, index) in employee.skills" :key="index">
       <div class="form-group col-md-6">
@@ -73,23 +73,15 @@
         </select>
       </div>
       <div class="form-group col-md-6">
-        <div class="row">
-          <div class="col-md-10">
-            <label v-if="index===0">Skill value</label>
-            <select class="form-control" v-model="skill.skillValue" required>
-              <option v-for="(mark, key) in marks" :key="key" :value="mark.markValue">{{mark.markValue}}</option>
-            </select>
-          </div>
-          <div class="col-md-2">
-            <label v-if="index===0">Remove</label>
-            <i class="fa fa-trash" aria-hidden="true" @click="removeSkillNew(index)"></i>
-          </div>
-        </div>
+        <label v-if="index===0">Skill value</label>
+        <select class="form-control" v-model="skill.skillValue" required>
+          <option v-for="(mark, key) in marks" :key="key" :value="mark.markValue">{{mark.markValue}}</option>
+        </select>
       </div>
     </div>
     <div class="form-row">
       <div class="form-group col-md-10">
-        <button type="submit" class="btn btn-outline-dark btn-block">{{isEdit? 'Edit' : 'Create'}} employee</button>
+        <button type="submit" class="btn btn-outline-dark btn-block">Edit employee</button>
       </div>
       <div class="form-group col-md-2">
         <router-link to="/" class="btn btn-outline-dark btn-block">Back</router-link>
@@ -105,7 +97,7 @@
     data() {
       return {
         employee: {
-          employee_id: '',
+          employee_id: '/',
           name: '',
           position: '',
           email: '',
@@ -120,13 +112,22 @@
         departmentShow: [],
         departmentForm: [],
         editCheck: true,
-        isEdit: false,
       }
     },
+    beforeRouteEnter(to, from, next) {
+      db.collection('employees').where('employee_id', '==', to.params.employee_id)
+        .get().then(querySnapshot => querySnapshot.forEach(doc => { next (vm => {
+        vm.employee.employee_id = doc.data().employee_id;
+        vm.employee.name = doc.data().name;
+        vm.employee.position = doc.data().position;
+        vm.employee.email = doc.data().email;
+        vm.employee.dateOfBirth = doc.data().dateOfBirth;
+        vm.employee.skills = doc.data().skills;
+        vm.employee.departments = doc.data().departments;
+        })
+      }));
+    },
     created() {
-      if (this.$router.history.current.params.employee_id !== undefined){
-        this.isEdit = true;
-      }
       db.collection('skills').get().then(querySnapshot => querySnapshot.forEach(doc => {
         const data = {
           'skillName': doc.data().skillName,
@@ -141,85 +142,46 @@
         this.marks.push(data)
       }));
       db.collection('departments').get().then(querySnapshot => querySnapshot.forEach(doc => {
-        this.departments.push(doc.data());
-        if (!this.isEdit) {
-          this.departmentShow.push(doc.data().deptName);
-        }
+        this.departments.push(doc.data())
       }));
-      if (!this.isEdit) {
-        this.departmentForm.push(this.departmentShow);
-      }
-      if (this.isEdit) {
-        db.collection('employees').where('employee_id', '==', this.$router.history.current.params.employee_id)
-          .get().then(querySnapshot => querySnapshot.forEach(doc => {
-          this.employee.employee_id = doc.data().employee_id;
-          this.employee.name = doc.data().name;
-          this.employee.position = doc.data().position;
-          this.employee.email = doc.data().email;
-          this.employee.dateOfBirth = doc.data().dateOfBirth;
-          this.employee.skills = doc.data().skills;
-          this.employee.departments = doc.data().departments;
-          this.updateDepartments(doc.data().departments);
-        }));
-      }
-    },
-    watch: {
-      $route (to) {
-        if (to.name === 'new-employee') {
-          this.employee.employee_id = '';
-          this.employee.name = '';
-          this.employee.email = '';
-          this.employee.position = '';
-          this.employee.dateOfBirth = '';
-          this.employee.departments = [];
-          this.employee.skills = [];
-          this.isEdit = false;
-          if (this.departmentForm.length > 1) {
-            this.departmentForm.length = 1;
-          }
-        }
-      }
+      db.collection('employees').where('employee_id', '==', this.$router.history.current.params.employee_id)
+        .get().then(querySnapshot => querySnapshot.forEach(doc => {
+        this.employee.employee_id = doc.data().employee_id;
+        this.employee.name = doc.data().name;
+        this.employee.position = doc.data().position;
+        this.employee.email = doc.data().email;
+        this.employee.dateOfBirth = doc.data().dateOfBirth;
+        this.employee.skills = doc.data().skills;
+        this.employee.departments = doc.data().departments;
+        this.updateDepartments(doc.data().departments);
+      }));
     },
     methods: {
       updateEmployee() {
-        if (this.isEdit) {
-          if (this.employee.departments.length > this.departmentForm.length) { this.employee.departments.pop() }
-          db.collection('employees').where('employee_id', '==', this.$route.params.employee_id)
-            .get().then(querySnapshot => {
-            querySnapshot.forEach(doc => {
-              doc.ref.update({
-                name: this.employee.name,
-                position: this.employee.position,
-                email: this.employee.email,
-                dateOfBirth: this.employee.dateOfBirth,
-                skills: this.employee.skills,
-                departments: this.employee.departments
-              }).then(() => {
-                this.$router.push({name: 'view-employee',
-                  params: {employee_id: this.employee.employee_id}})
-              })
+        if (this.employee.departments.length > this.departmentForm.length) { this.employee.departments.pop() }
+        db.collection('employees').where('employee_id', '==', this.$route.params.employee_id)
+          .get().then(querySnapshot => {
+          querySnapshot.forEach(doc => {
+            doc.ref.update({
+              name: this.employee.name,
+              position: this.employee.position,
+              email: this.employee.email,
+              dateOfBirth: this.employee.dateOfBirth,
+              skills: this.employee.skills,
+              departments: this.employee.departments
+            }).then(() => {
+              this.$router.push({name: 'view-employee',
+                params: {employee_id: this.employee.employee_id}})
             })
           })
-        } else {
-          db.collection('employees').add({
-            employee_id: this.employee.employee_id,
-            name: this.employee.name,
-            position: this.employee.position,
-            email: this.employee.email,
-            dateOfBirth: this.employee.dateOfBirth,
-            skills: this.employee.skills,
-            departments: this.employee.departments
-          }).then(() => {
-            this.$router.push('/')
-          }).catch(error => console.log(error))
-        }
+        })
       },
       addSkill() {
         this.employee.skills.push({skillName: 'Choose skill..', skillValue: 'Skill value..'});
+        // console.log(this.skills);
       },
-      removeSkillNew(index){
-        let skillName = this.employee.skills[index].skillName;
-        this.employee.skills.splice(index, 1);
+      removeSkill() {
+        let skillName = (this.employee.skills.pop().skillName);
         if (skillName !== 'Choose skill..') {
           this.skills.find(s => s.skillName === skillName).skillAvailable = true
         }
@@ -255,11 +217,8 @@
         if (key === 0) {
           this.tmpArray = this.departments;
           this.tmpArray = this.tmpArray.find(d => d.deptName === event.target.value).subDept;
-          if (this.tmpArray === undefined) {
-            this.departmentForm.length = 1;
-          }
           let array2 = [];
-          if (this.tmpArray !== undefined && this.tmpArray.length > 0) {
+          if (this.tmpArray.length > 0) {
             array2.length = 0;
             this.tmpArray.forEach(el => {
               array2.push(el.deptName);

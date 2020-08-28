@@ -11,7 +11,7 @@
       </blockquote>
       <blockquote>
         <small class="font-weight-bold font-italic">Departments:</small>
-        <small v-for="(dep, key) in dept" :key="key"><cite title="Source Title">{{dep}},  <i class="icon-map-marker"></i></cite></small>
+        <small v-for="(dep, key) in dept" :key="key"><cite title="Source Title">{{dep}},<i class="icon-map-marker"></i></cite></small>
       </blockquote>
       <p>
         {{email}} <br>

@@ -108,4 +108,7 @@
   .mouseCursor {
     cursor: s-resize;
   }
+  .container {
+    min-height: 100%;
+  }
 </style>
