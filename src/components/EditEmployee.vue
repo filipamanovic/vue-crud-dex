@@ -199,7 +199,9 @@
             this.employee.departments.pop()
           }
           if (this.selectedFile != null) {
-            db.storage().refFromURL(this.employee.imagePath).delete();
+            if (this.employee.imagePath !== undefined) {
+              db.storage().refFromURL(this.employee.imagePath).delete();
+            }
             const storageRef = db.storage().ref(`image/${this.selectedFile.name + Date.now()}`).put(this.selectedFile);
             storageRef.on(`state_changed`, () => {
                 // path = (snapshot.bytesTransferred/snapshot.totalBytes)*100;
