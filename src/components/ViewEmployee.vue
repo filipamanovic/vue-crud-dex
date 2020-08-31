@@ -1,8 +1,8 @@
 <template>
   <div class="row mt-4">
     <div class="col-md-6 img">
-      <img src="http://www.terapanthbangalore.org/siteimages/employee_default.png"
-           alt="" class="img-rounded" style="height: 270px; width: auto">
+      <img :src="imagePath? imagePath: 'http://www.terapanthbangalore.org/siteimages/employee_default.png'"
+           alt="" class="img-fluid img-thumbnail" style="height: 270px; width: auto">
     </div>
     <div class="col-md-6 details">
       <blockquote>
@@ -50,11 +50,12 @@
         position: null,
         skills: null,
         email: null,
-        dateOfBirth: null
+        dateOfBirth: null,
+        imagePath: null
       }
     },
     beforeRouteEnter(to, from, next) {
-      db.collection('employees').where('employee_id', '==', to.params.employee_id)
+      db.firestore().collection('employees').where('employee_id', '==', to.params.employee_id)
         .get().then(querySnapshot => {
         querySnapshot.forEach(doc => {
           next(vm => {
@@ -65,6 +66,7 @@
             vm.skills = doc.data().skills;
             vm.email = doc.data().email;
             vm.dateOfBirth = doc.data().dateOfBirth;
+            vm.imagePath = doc.data().imagePath;
           })
         })
       })
@@ -74,7 +76,7 @@
     },
     methods: {
       fetchData () {
-        db.collection('employees').where('employee_id', '==', this.$route.params.employee_id)
+        db.firestore().collection('employees').where('employee_id', '==', this.$route.params.employee_id)
           .get().then(querySnapshot => {
           querySnapshot.forEach(doc => {
             this.employee_id = doc.data().employee_id;
@@ -86,7 +88,7 @@
       },
       deleteEmployee() {
         if (confirm('Are you sure?')) {
-          db.collection('employees').where('employee_id', '==', this.$route.params.employee_id)
+          db.firestore().collection('employees').where('employee_id', '==', this.$route.params.employee_id)
             .get().then(querySnapshot => {
             querySnapshot.forEach(doc => {
               doc.ref.delete();

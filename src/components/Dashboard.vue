@@ -51,7 +51,7 @@
       }
     },
     created () {
-      db.collection('employees').orderBy('employee_id').get()
+      db.firestore().collection('employees').orderBy('employee_id').get()
         .then(querySnapshot => {
           querySnapshot.forEach(doc => {
             const data = {

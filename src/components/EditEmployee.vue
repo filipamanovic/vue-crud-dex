@@ -1,8 +1,8 @@
 <template>
-  <form class="mt-4 col-8" @submit.prevent="updateEmployee">
+  <form class="mt-4 col-8" @submit.prevent="updateEmployee" enctype="multipart/form-data">
     <h4>{{(isEdit)? 'Edit' : 'Create'}} employee</h4>
     <div class="alert alert-warning" role="alert" v-if="userIdTaken">
-      EmployeeID is taken, please choose another one
+      {{this.errorMessage}}
     </div>
     <div class="form-row">
       <div class="form-group col-md-3">
@@ -10,7 +10,8 @@
         <input type="text" class="form-control"
                id="employeeID" required
                v-model="employee.employee_id"
-                :disabled="isEdit">
+               :disabled="isEdit"
+               @change="checkID">
       </div>
       <div class="form-group col-md-5">
         <label>Name</label>
@@ -37,12 +38,19 @@
         <input type="date" class="form-control" required v-model="employee.dateOfBirth">
       </div>
     </div>
-    <label >Department</label>
-    <div class="form-group">
-      <div class="form-group" v-for="(form, key) in departmentForm" :key="key">
-        <select class="form-control" required @change="onDeptSelect($event, key)" v-model="employee.departments[key]">
-          <option v-for="(dept, key) in form" :key="key" :value="dept">{{dept}}</option>
-        </select>
+
+    <div class="form-row">
+      <div class="form-group col-md-8">
+        <label >Department</label>
+        <div class="form-group" v-for="(form, key) in departmentForm" :key="key">
+          <select class="form-control" required @change="onDeptSelect($event, key)" v-model="employee.departments[key]">
+            <option v-for="(dept, key) in form" :key="key" :value="dept">{{dept}}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group col-md-4">
+        <label>Image</label>
+        <input type="file" class="form-control-file" @change="onFileSelected">
       </div>
     </div>
     <div class="form-row">
@@ -54,12 +62,6 @@
           Add Skill
         </button>
       </div>
-      <!--<div class="form-group col-md-6" v-if="employee.skills.length > 0">-->
-        <!--<button class="btn btn-outline-warning btn-block"-->
-                <!--@click.prevent="removeSkill">-->
-          <!--Remove skill-->
-        <!--</button>-->
-      <!--</div>-->
     </div>
     <div class="form-row" v-for="(skill, index) in employee.skills" :key="index">
       <div class="form-group col-md-6">
@@ -92,10 +94,10 @@
     </div>
     <div class="form-row">
       <div class="form-group col-md-10">
-        <button type="submit" class="btn btn-outline-dark btn-block">{{isEdit? 'Edit' : 'Create'}} employee</button>
+        <button type="submit" :disabled="userIdTaken" class="btn btn-outline-dark btn-block">{{isEdit? 'Edit' : 'Create'}} employee</button>
       </div>
       <div class="form-group col-md-2">
-        <router-link to="/" class="btn btn-outline-dark btn-block">Back</router-link>
+        <router-link :to="isEdit? '/' + employee.employee_id: '/'" class="btn btn-outline-dark btn-block">Back</router-link>
       </div>
     </div>
   </form>
@@ -114,8 +116,10 @@
           email: '',
           dateOfBirth: '',
           skills: [],
-          departments: []
+          departments: [],
+          imagePath: ''
         },
+        selectedFile: null,
         skills: [],
         marks: [],
         departments: [],
@@ -125,26 +129,27 @@
         editCheck: true,
         isEdit: false,
         userIdTaken: false,
+        errorMessage: ''
       }
     },
     created() {
       if (this.$router.history.current.params.employee_id !== undefined){
         this.isEdit = true;
       }
-      db.collection('skills').get().then(querySnapshot => querySnapshot.forEach(doc => {
+      db.firestore().collection('skills').get().then(querySnapshot => querySnapshot.forEach(doc => {
         const data = {
           'skillName': doc.data().skillName,
           'skillAvailable': true
         };
         this.skills.push(data);
       }));
-      db.collection('marks').get().then(querySnapshot => querySnapshot.forEach(doc => {
+      db.firestore().collection('marks').get().then(querySnapshot => querySnapshot.forEach(doc => {
         const data = {
           'markValue': doc.data().markValue
         };
         this.marks.push(data)
       }));
-      db.collection('departments').get().then(querySnapshot => querySnapshot.forEach(doc => {
+      db.firestore().collection('departments').get().then(querySnapshot => querySnapshot.forEach(doc => {
         this.departments.push(doc.data());
         if (!this.isEdit) {
           this.departmentShow.push(doc.data().deptName);
@@ -154,7 +159,7 @@
         this.departmentForm.push(this.departmentShow);
       }
       if (this.isEdit) {
-        db.collection('employees').where('employee_id', '==', this.$router.history.current.params.employee_id)
+        db.firestore().collection('employees').where('employee_id', '==', this.$router.history.current.params.employee_id)
           .get().then(querySnapshot => querySnapshot.forEach(doc => {
           this.employee.employee_id = doc.data().employee_id;
           this.employee.name = doc.data().name;
@@ -164,6 +169,7 @@
           this.employee.skills = doc.data().skills;
           this.employee.departments = doc.data().departments;
           this.updateDepartments(doc.data().departments);
+          this.employee.imagePath = doc.data().imagePath;
         }));
       }
     },
@@ -178,6 +184,8 @@
           this.employee.departments = [];
           this.employee.skills = [];
           this.isEdit = false;
+          this.employee.imagePath = '';
+          this.selectedFile = null;
           if (this.departmentForm.length > 1) {
             this.departmentForm.length = 1;
           }
@@ -187,31 +195,48 @@
     methods: {
       updateEmployee() {
         if (this.isEdit) {
-          if (this.employee.departments.length > this.departmentForm.length) { this.employee.departments.pop() }
-          db.collection('employees').where('employee_id', '==', this.$route.params.employee_id)
-            .get().then(querySnapshot => {
-            querySnapshot.forEach(doc => {
-              doc.ref.update({
-                name: this.employee.name,
-                position: this.employee.position,
-                email: this.employee.email,
-                dateOfBirth: this.employee.dateOfBirth,
-                skills: this.employee.skills,
-                departments: this.employee.departments
-              }).then(() => {
-                this.$router.push({name: 'view-employee',
-                  params: {employee_id: this.employee.employee_id}})
-              })
-            })
-          })
-        } else {
-          // db.collection('employees').where("employee_id", "==", this.employee.employee_id).get()
-          //   .then(qs => {qs.forEach(doc => console.log(doc.exists))})
-          db.collection('employees').where("employee_id", "==", this.employee.employee_id).get().then(
-            qs => {
-              if (qs.empty) {
-                db.collection('employees').add({
-                  employee_id: this.employee.employee_id,
+          if (this.employee.departments.length > this.departmentForm.length) {
+            this.employee.departments.pop()
+          }
+          if (this.selectedFile != null) {
+            db.storage().refFromURL(this.employee.imagePath).delete();
+            const storageRef = db.storage().ref(`image/${this.selectedFile.name + Date.now()}`).put(this.selectedFile);
+            storageRef.on(`state_changed`, () => {
+                // path = (snapshot.bytesTransferred/snapshot.totalBytes)*100;
+              }, error => {
+                console.log(error.message)
+              },
+              () => {
+                this.selectedFile = 100;
+                storageRef.snapshot.ref.getDownloadURL().then((url) => {
+                  this.employee.imagePath = url;
+                  db.firestore().collection('employees').where('employee_id', '==', this.$route.params.employee_id)
+                    .get().then(querySnapshot => {
+                    querySnapshot.forEach(doc => {
+                      doc.ref.update({
+                        name: this.employee.name,
+                        position: this.employee.position,
+                        email: this.employee.email,
+                        dateOfBirth: this.employee.dateOfBirth,
+                        skills: this.employee.skills,
+                        departments: this.employee.departments,
+                        imagePath: this.employee.imagePath
+                      }).then(() => {
+                        this.$router.push({
+                          name: 'view-employee',
+                          params: {employee_id: this.employee.employee_id}
+                        })
+                      })
+                    })
+                  })
+                });
+              }
+            );
+          } else {
+            db.firestore().collection('employees').where('employee_id', '==', this.$route.params.employee_id)
+              .get().then(querySnapshot => {
+              querySnapshot.forEach(doc => {
+                doc.ref.update({
                   name: this.employee.name,
                   position: this.employee.position,
                   email: this.employee.email,
@@ -219,25 +244,87 @@
                   skills: this.employee.skills,
                   departments: this.employee.departments
                 }).then(() => {
-                  this.$router.push('/')
-                }).catch(error => console.log(error));
+                  this.$router.push({
+                    name: 'view-employee',
+                    params: {employee_id: this.employee.employee_id}
+                  })
+                })
+              })
+            })
+          }
+        } else {
+          if (this.selectedFile !== null) {
+            const storageRef = db.storage().ref(`image/${this.selectedFile.name + Date.now()}`).put(this.selectedFile);
+            storageRef.on(`state_changed`, () => {
+                // path = (snapshot.bytesTransferred/snapshot.totalBytes)*100;
+              }, error => {
+                console.log(error.message)
+              },
+              () => {
+                this.selectedFile = 100;
+                storageRef.snapshot.ref.getDownloadURL().then((url) => {
+                  this.employee.imagePath = url;
+                  db.firestore().collection('employees').add({
+                    employee_id: this.employee.employee_id,
+                    name: this.employee.name,
+                    position: this.employee.position,
+                    email: this.employee.email,
+                    dateOfBirth: this.employee.dateOfBirth,
+                    skills: this.employee.skills,
+                    departments: this.employee.departments,
+                    imagePath: this.employee.imagePath
+                  }).then(() => {
+                    this.$router.push('/')
+                  }).catch(error => console.log(error));
+                  this.userIdTaken = false;
+                  this.errorMessage = '';
+                  this.selectedFile = null;
+                });
+              }
+            );
+          } else {
+            db.firestore().collection('employees').add({
+              employee_id: this.employee.employee_id,
+              name: this.employee.name,
+              position: this.employee.position,
+              email: this.employee.email,
+              dateOfBirth: this.employee.dateOfBirth,
+              skills: this.employee.skills,
+              departments: this.employee.departments,
+            }).then(() => {
+              this.$router.push('/')
+            }).catch(error => console.log(error));
+            this.userIdTaken = false;
+            this.errorMessage = '';
+          }
+        }
+      },
+      checkID() {
+        if (this.employee.employee_id !== '') {
+          db.firestore().collection('employees').where("employee_id", "==", this.employee.employee_id).get().then(
+            qs => {
+              if (qs.empty) {
                 this.userIdTaken = false;
+                this.errorMessage = "";
               } else {
                 this.userIdTaken = true;
+                this.errorMessage = "EmployeeID already taken, please choose another!";
               }
-            }
-          );
-          // db.collection('employees').add({
-          //   employee_id: this.employee.employee_id,
-          //   name: this.employee.name,
-          //   position: this.employee.position,
-          //   email: this.employee.email,
-          //   dateOfBirth: this.employee.dateOfBirth,
-          //   skills: this.employee.skills,
-          //   departments: this.employee.departments
-          // }).then(() => {
-          //   this.$router.push('/')
-          // }).catch(error => console.log(error))
+            })
+        } else {
+          this.userIdTaken = true;
+          this.errorMessage = "EmployeeID is required!";
+        }
+      },
+      onFileSelected(event) {
+        this.selectedFile = event.target.files[0];
+        const availableTypes = ['image/jpeg', 'image/jpg', 'image/gif', 'image/png'];
+        if (this.selectedFile && (this.selectedFile.size > 3000000 || !availableTypes.includes(this.selectedFile.type))) {
+          this.userIdTaken = true;
+          this.errorMessage = "Only allowed jpeg, jpg, gif and png, max size 3mb"
+        } else {
+          this.userIdTaken = false;
+          this.errorMessage = "";
         }
       },
       addSkill() {

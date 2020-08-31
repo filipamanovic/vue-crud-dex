@@ -132,7 +132,7 @@
       }
     },
     created() {
-      db.collection('departments').get().then(querySnapshot => querySnapshot.forEach(doc => {
+      db.firestore().collection('departments').get().then(querySnapshot => querySnapshot.forEach(doc => {
         this.testObj.departmentID = doc.id;
         this.testObj.departments = doc.data();
         this.departments.push({...this.testObj});
@@ -144,7 +144,7 @@
           case "editDepartment": {
             let department = this.departments.find(d => d.departmentID === this.editDepartmentID);
             department.departments.deptName = this.newDepartmentObj.deptName;
-            db.collection('departments').doc(this.editDepartmentID).update({deptName: this.newDepartmentObj.deptName});
+            db.firestore().collection('departments').doc(this.editDepartmentID).update({deptName: this.newDepartmentObj.deptName});
             this.editDepartmentCon = false;
             this.newDepartment = false;
             this.caseMsg = '';
@@ -155,7 +155,7 @@
             } else {
               this.departments.find(d => d.departmentID === this.addDepartmentID).departments.subDept = [{...this.newDepartmentObj}];
             }
-            db.collection('departments').doc(this.addDepartmentID).update({
+            db.firestore().collection('departments').doc(this.addDepartmentID).update({
               subDept: this.departments.find(d => d.departmentID === this.addDepartmentID).departments.subDept
             });
             this.newDepartmentObj.deptName = '';
@@ -166,7 +166,7 @@
           case "editSubDepartment": {
             this.departments.find(d => d.departmentID === this.editDepartmentID).departments
               .subDept[this.editSubDepartmentKey].deptName = this.newDepartmentObj.deptName;
-            db.collection('departments').doc(this.editDepartmentID).update({
+            db.firestore().collection('departments').doc(this.editDepartmentID).update({
               subDept: this.departments.find(d => d.departmentID === this.editDepartmentID).departments.subDept
             });
             this.editSubDepartmentCon = false;
@@ -182,7 +182,7 @@
               this.departments.find(d => d.departmentID === this.addSubDepartmentID)
                 .departments.subDept.find(d => d.deptName === this.addSubDepartmentDeptName).subDept = [{...this.newDepartmentObj}]
             }
-            db.collection('departments').doc(this.addSubDepartmentID).update({
+            db.firestore().collection('departments').doc(this.addSubDepartmentID).update({
               subDept: this.departments.find(d => d.departmentID === this.addSubDepartmentID).departments.subDept
             });
             this.addSubDepartmentCon = false;
@@ -193,7 +193,7 @@
             this.departments.find(d => d.departmentID === this.editSubSubDepartmentID)
               .departments.subDept[this.editSubSubDepartmentKey1].subDept[this.editSubSubDepartmentKey2]
               .deptName = this.newDepartmentObj.deptName;
-            db.collection('departments').doc(this.editSubSubDepartmentID).update({
+            db.firestore().collection('departments').doc(this.editSubSubDepartmentID).update({
               subDept: this.departments.find(d => d.departmentID === this.editSubSubDepartmentID).departments.subDept
             });
             this.editSubSubDepartmentCon = false;
@@ -202,7 +202,7 @@
           } break;
           default : {
             let newDocumentID = '';
-            db.collection('departments').add({
+            db.firestore().collection('departments').add({
               deptName: this.newDepartmentObj.deptName
             }).then(function(docRef) {
               newDocumentID = docRef.id;
@@ -220,7 +220,7 @@
       deleteDepartment(departmentID, key) {
         if (confirm('Are you sure?')) {
           this.departments.splice(key, 1);
-          db.collection('departments').doc(departmentID).delete();
+          db.firestore().collection('departments').doc(departmentID).delete();
         }
       },
       editDepartment(departmentName, departmentID) {
@@ -241,7 +241,7 @@
       deleteSubDepartment(departmentID, key) {
         if (confirm('Are you sure?')) {
           this.departments.find(d => d.departmentID === departmentID).departments.subDept.splice(key, 1);
-          db.collection('departments').doc(departmentID).update({
+          db.firestore().collection('departments').doc(departmentID).update({
             subDept: this.departments.find(d => d.departmentID === departmentID).departments.subDept
           });
         }
@@ -266,7 +266,7 @@
       deleteSubSubDepartment(departmentID, key1, key2){
         if (confirm('Are you sure?')) {
           this.departments.find(d => d.departmentID === departmentID).departments.subDept[key1].subDept.splice(key2, 1);
-          db.collection('departments').doc(departmentID).update({
+          db.firestore().collection('departments').doc(departmentID).update({
             subDept: this.departments.find(d => d.departmentID === departmentID).departments.subDept
           });
         }
