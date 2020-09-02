@@ -4,6 +4,7 @@ import Dashboard from '../components/Dashboard'
 import ViewEmployee from '../components/ViewEmployee'
 import EditEmployee from '../components/EditEmployee'
 import ManageDepartments from '../components/ManageDepartments';
+import ManageDepartmentsUpdate from '../components/ManageDepartmentsUpdate';
 
 Vue.use(Router);
 
@@ -33,6 +34,11 @@ export default new Router({
       path: '/manageDepartments',
       name: 'manage-departments',
       component: ManageDepartments
+    },
+    {
+      path: '/manageDepartmentsUpdate',
+      name: 'manage-departments-update',
+      component: ManageDepartmentsUpdate
     }
   ]
 })

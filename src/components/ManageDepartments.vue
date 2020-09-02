@@ -40,12 +40,6 @@
             </a>
           </div>
           <div class="com-md-6">
-            <!--<button class="float-right btn btn-outline-danger btn-sm"-->
-                    <!--@click="deleteDepartment(dept.departmentID, key)">Delete</button>-->
-            <!--<button class="float-right btn btn-outline-warning btn-sm mr-2"-->
-                    <!--@click="editDepartment(dept.departments.deptName, dept.departmentID)">Edit</button>-->
-            <!--<button class="float-right btn btn-outline-success btn-sm mr-2"-->
-                    <!--@click="addDepartment(dept.departmentID, dept.departments.deptName)">Add</button>-->
             <i class="fa fa-pencil mr-2" aria-hidden="true"
                @click="addDepartment(dept.departmentID, dept.departments.deptName)"></i>
             <i class="fa fa-edit mr-2" aria-hidden="true"
