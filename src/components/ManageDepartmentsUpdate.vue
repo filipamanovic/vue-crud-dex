@@ -10,6 +10,7 @@
   import db from "../firebase/firebaseInit";
 
   export default {
+    name: 'ManageDepartments',
     data() {
       return {
         departments: [],
@@ -57,7 +58,8 @@
       fromChildReceived(val) {
         let newDocumentID = '';
         db.firestore().collection('departments').add({
-          deptName: val.deptName
+          deptName: val.deptName,
+          subDept: []
         }).then(function (docRef) {
           newDocumentID = docRef.id
         }).then(() => {
@@ -65,6 +67,13 @@
           this.testObj.departments = {...val};
           this.departments.push({...this.testObj});
           val.deptName = '';
+        }).then(() => {
+          this.departments.length = 0;
+          db.firestore().collection('departments').get().then(qs => qs.forEach(doc => {
+            this.testObj.departmentID = doc.id;
+            this.testObj.departments = doc.data();
+            this.departments.push({...this.testObj});
+          }));
         });
       },
       editObject(value, key, deptName) {
@@ -89,32 +98,38 @@
       createObject(value, key, deptName) {
         let positions = key.toString().split('');
         if (positions.length === 1) {
-          if (this.departments.find(d => d.departmentID === value).departments.subDept !== undefined) {
-            this.departments.find(d => d.departmentID === value).departments.subDept.push({...deptName});
-          } else {
-            this.departments.find(d => d.departmentID === value).departments.subDept = [{...deptName}];
-          }
+          this.departments.find(d => d.departmentID === value).departments.subDept.push({...deptName});
+
           db.firestore().collection('departments').doc(value).update({
             subDept: this.departments.find(d => d.departmentID === value).departments.subDept
+          }).then(() => {
+            this.departments.length = 0;
+            db.firestore().collection('departments').get().then(qs => qs.forEach(doc => {
+              this.testObj.departmentID = doc.id;
+              this.testObj.departments = doc.data();
+              this.departments.push({...this.testObj});
+            }));
           });
         } else {
           let tmpDepartments = this.departments.find(d => d.departmentID === value).departments;
-          for (var x = 1; x < positions.length; x ++) {
+          for (var x = 1; x < positions.length; x++) {
             if (x === positions.length - 1) {
-              if (tmpDepartments.subDept[positions[x]].subDept !== undefined) {
-                tmpDepartments.subDept[positions[x]].subDept.push({...deptName})
-              } else {
-                tmpDepartments.subDept[positions[x]].subDept = [{...deptName}]
-              }
+              tmpDepartments.subDept[positions[x]].subDept.push({...deptName})
             } else {
               tmpDepartments = tmpDepartments.subDept[positions[x]];
             }
           }
           db.firestore().collection('departments').doc(value).update({
             subDept: this.departments.find(d => d.departmentID === value).departments.subDept
+          }).then(() => {
+            this.departments.length = 0;
+            db.firestore().collection('departments').get().then(qs => qs.forEach(doc => {
+              this.testObj.departmentID = doc.id;
+              this.testObj.departments = doc.data();
+              this.departments.push({...this.testObj});
+            }));
           });
         }
-        // console.log(this.departments);
       }
     }
   };

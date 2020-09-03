@@ -16,7 +16,7 @@
       </div>
     </div>
   <div class="list-group collapse ml-3" :id="node.deptName.replace(/\s/g, '')+keyValue"
-       v-if="node.subDept">
+       v-if="(node.subDept && node.subDept.length > 0)">
     <node v-for="(child, key) in node.subDept" :node="child" :departmentID="departmentID"
           :key="key" :keyValue="keyValue+ '' + key"></node>
   </div>
@@ -42,8 +42,5 @@
       return {
       }
     },
-    created() {
-
-    }
   };
 </script>

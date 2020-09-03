@@ -27,11 +27,11 @@
       </form>
     </div>
       <div class="col-md-10">
-        <node-tree v-for="(tree, key) in treeData"
+        <NodeTree v-for="(tree, key) in treeData"
                    :node="tree.departments"
                    :keyValue="key"
                    :departmentID="tree.departmentID"
-                   :key="key"></node-tree>
+                   :key="key"></NodeTree>
       </div>
     </div>
 </template>
@@ -40,6 +40,7 @@
   import NodeTree from "./NodeTree";
 
   export default {
+    name: 'tree',
     props: {
       treeData: Array,
     },
@@ -49,7 +50,8 @@
     data() {
       return {
         newDepartmentObj: {
-          deptName: ''
+          deptName: '',
+          subDept: []
         },
         newDepartment: false,
         addMsg: '/root',
@@ -108,7 +110,7 @@
         this.actionVar = "Create";
         this.newDepartment = true;
       })
-    }
+    },
   };
 </script>
 
