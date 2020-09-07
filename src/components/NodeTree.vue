@@ -11,7 +11,7 @@
            @click="addDepartment(departmentID, keyValue)"></i>
         <i class="fa fa-edit mr-2" aria-hidden="true"
            @click="editDepartment(departmentID, keyValue, node.deptName)"></i>
-        <i class="fa fa-trash" aria-hidden="true"
+        <i v-if="node.subDept.length === 0" class="fa fa-trash" aria-hidden="true"
            @click="deleteDepartment(departmentID, keyValue)"></i>
       </div>
     </div>

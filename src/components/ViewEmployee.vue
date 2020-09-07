@@ -7,11 +7,12 @@
     <div class="col-md-6 details">
       <blockquote>
         <h5>{{name}}</h5>
-        <small><cite title="Source Title">{{position}}  <i class="icon-map-marker"></i></cite></small>
+        <small class="font-weight-bold font-italic">Position:</small>
+        <small><cite title="Source Title">{{" " + position}}  <i class="icon-map-marker"></i></cite></small>
       </blockquote>
       <blockquote>
         <small class="font-weight-bold font-italic">Departments:</small>
-        <small v-for="(dep, key) in dept" :key="key"><cite title="Source Title">{{dep}},<i class="icon-map-marker"></i></cite></small>
+        <small v-for="(dep, key) in dept" :key="key"><cite title="Source Title">{{" " + dep}},<i class="icon-map-marker"></i></cite></small>
       </blockquote>
       <p>
         {{email}} <br>

@@ -16,15 +16,9 @@
             </router-link>
           </li>
           <li class="nav-item active">
-            <router-link v-bind:to="{name: 'manage-departments'}"
-                         class="nav-link">
-              Manage departments
-            </router-link>
-          </li>
-          <li class="nav-item active">
             <router-link v-bind:to="{name: 'manage-departments-update'}"
                          class="nav-link">
-              Manage departments update
+              Manage departments
             </router-link>
           </li>
         </ul>

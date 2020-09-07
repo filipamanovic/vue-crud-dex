@@ -126,6 +126,8 @@
         tmpArray: [],
         departmentShow: [],
         departmentForm: [],
+        currentDepartments: [],
+        selectedKeys: [],
         editCheck: true,
         isEdit: false,
         userIdTaken: false,
@@ -151,6 +153,7 @@
       }));
       db.firestore().collection('departments').get().then(querySnapshot => querySnapshot.forEach(doc => {
         this.departments.push(doc.data());
+        this.currentDepartments.push(doc.data());
         if (!this.isEdit) {
           this.departmentShow.push(doc.data().deptName);
         }
@@ -357,8 +360,11 @@
         this.tmpArray = this.departments;
         departments.forEach(dep => {
           let tmpArray = [];
-          this.tmpArray.forEach(dep123 => {
+          this.tmpArray.forEach((dep123, index) => {
             tmpArray.push(dep123.deptName);
+            if (dep123.deptName === dep) {
+              this.selectedKeys.push(index);
+            }
           });
           if (this.tmpArray.find(d => d.deptName === dep) !== undefined && this.tmpArray.find(d => d.deptName === dep).subDept !== undefined) {
             this.tmpArray = this.tmpArray.find(d => d.deptName === dep).subDept
@@ -367,46 +373,45 @@
         });
       },
       onDeptSelect(event, key) {
-        if (key === 0) {
-          this.tmpArray = this.departments;
-          this.tmpArray = this.tmpArray.find(d => d.deptName === event.target.value).subDept;
-          if (this.tmpArray === undefined) {
-            this.departmentForm.length = 1;
-          }
-          let array2 = [];
-          if (this.tmpArray !== undefined && this.tmpArray.length > 0) {
-            array2.length = 0;
-            this.tmpArray.forEach(el => {
-              array2.push(el.deptName);
-            });
-            if (this.departmentForm.length > 1) {
-              key++;
-              this.departmentForm.splice(key, 1, array2);
-            } else {
-              this.departmentForm.push(array2);
-            }
-            if (this.departmentForm.length > 2) {
-              this.departmentForm.pop();
-            }
-            this.editCheck = false;
-          }
-        } else if (key === 1) {
-          let arr3 = [];
-          if (this.editCheck) {
-            this.tmpArray = this.departments;
-            this.tmpArray = this.tmpArray.find(d => d.deptName === this.employee.departments[0]).subDept;
-          }
-          arr3 = this.tmpArray.find(d => d.deptName === event.target.value).subDept;
-          if (arr3 !== undefined) {
-            let array2 = [];
-            arr3.forEach(el => {
-              array2.push(el.deptName);
-            });
-            this.departmentForm.push(array2);
+        this.currentDepartments = {...this.departments};
+        if (this.departmentForm.length < key + 2) {
+          if (this.selectedKeys.length === key + 1){
+            this.selectedKeys.pop();
+            this.selectedKeys.push(event.target.selectedIndex);
           } else {
-            if (this.departmentForm.length > 2) {
-              this.departmentForm.pop();
-            }
+            this.selectedKeys.push(event.target.selectedIndex);
+          }
+          this.selectedKeys.forEach(selKey => {
+            this.currentDepartments = this.currentDepartments[selKey].subDept
+          });
+          if (this.currentDepartments.length > 0) {
+            let subNames = this.currentDepartments.map(cd => cd.deptName);
+            this.departmentForm.push(subNames);
+          }
+        } else if (this.departmentForm.length === key + 2) {
+          this.selectedKeys.splice(key, this.selectedKeys.length, event.target.selectedIndex);
+          this.selectedKeys.forEach(selKey => {
+            this.currentDepartments = this.currentDepartments[selKey].subDept
+          });
+          if (this.currentDepartments.length > 0) {
+            let subNames = this.currentDepartments.map(cd => cd.deptName);
+            this.departmentForm.pop();
+            this.departmentForm.push(subNames);
+          } else {
+            this.departmentForm.pop();
+          }
+        } else {
+          this.selectedKeys.splice(key, this.selectedKeys.length, event.target.selectedIndex);
+          let to = this.departmentForm.length + 1;
+          for (let x = key + 2; x < to; x ++) {
+            this.departmentForm.pop();
+          }
+          this.selectedKeys.forEach(selKey => {
+            this.currentDepartments = this.currentDepartments[selKey].subDept
+          });
+          if (this.currentDepartments.length > 0) {
+            let subNames = this.currentDepartments.map(cd => cd.deptName);
+            this.departmentForm.push(subNames);
           }
         }
       }
