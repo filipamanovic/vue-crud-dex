@@ -199,7 +199,10 @@
       updateEmployee() {
         if (this.isEdit) {
           if (this.employee.departments.length > this.departmentForm.length) {
-            this.employee.departments.pop()
+            for (let x = 0; x < this.employee.departments.length - this.departmentForm.length + 3; x ++) {
+              console.log('Cao cao');
+              this.employee.departments.pop();
+            }
           }
           if (this.selectedFile != null) {
             if (this.employee.imagePath !== undefined) {
